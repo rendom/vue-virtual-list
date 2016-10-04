@@ -4,7 +4,8 @@
       <ul v-bind:style="{
         'transform': 'translate(0px, '+scrollOffset + 'px)',
         'list-style-type': 'none',
-        'padding-left': '0px'
+        'padding-left': '0px',
+        'margin': '0px'
       }">
         <component v-bind:is="childComponent" v-for="item in viewportItems" :item="item" ref="item">
         </component>
@@ -30,7 +31,7 @@ export default {
     return {
       firstItemIdx: 0,
       lastItemIdx: 52,
-      bufferCount: 100,
+      bufferCount: 10,
       scrollTimer: null,
       scrollOffset: 0,
       container: window,
@@ -59,8 +60,7 @@ export default {
 
       this.scrollHeight = size
     }
-    this.setViewport()
-
+    this.onScroll()
     this.container.addEventListener('scroll', this.onScroll)
   },
 
@@ -75,7 +75,7 @@ export default {
         }
 
         this.scrollHeight = size
-        this.setViewport()
+        this.onScroll()
       }
     }
   },
@@ -85,6 +85,10 @@ export default {
       let self = this
       var top = 0
       var bottom = 0
+
+      let firstItemIdx = false
+      let lastItemIdx = false
+
       if (this.container === window) {
         top = this.container.pageYOffset
         bottom = this.container.pageYOffset + document.documentElement.clientHeight
@@ -94,35 +98,40 @@ export default {
       }
 
       if (this.dynamicHeight === false) {
-        const firstItem = Math.max(0, Math.floor(top / this.rowHeight)) // - self.bufferCount)
-        const lastItem = (Math.ceil(bottom / this.rowHeight) - 1) // + self.bufferCount) - 1
-
-        self.firstItemIdx = firstItem
-        self.lastItemIdx = lastItem
+        firstItemIdx = Math.max(0, Math.floor(top / this.rowHeight)) // - self.bufferCount)
+        lastItemIdx = (Math.ceil(bottom / this.rowHeight) - 1) // + self.bufferCount) - 1
       } else {
-        for (let i = 0; i < self.items.length; i++) {
-          const itemPos = self.getScrollOffset(i) + this.items[i].h
-          if (itemPos >= top) {
-            self.firstItemIdx = i
-            break
-          }
-        }
-
-        for (let i = self.firstItemIdx; i < self.items.length; i++) {
+        for (let i = 0; i < self.itemLength; i++) {
           const itemPos = self.getScrollOffset(i)
-          if (itemPos >= bottom) {
-            self.lastItemIdx = i
+          if (itemPos >= top && firstItemIdx === false) {
+            firstItemIdx = Math.max(0, i - self.bufferCount)
+          }
+
+          if (firstItemIdx !== false && itemPos >= bottom) {
+            lastItemIdx = (i + self.bufferCount) - 1
             break
           }
         }
       }
-      self.scrollOffset = self.getScrollOffset(self.firstItemIdx)
-      this.setViewport()
+
+      if (lastItemIdx === false) {
+        lastItemIdx = self.itemLength - 1
+        for (let i = self.itemLength; i <= 0; i--) {
+          const itemPos = self.getScrollOffset(i)
+          if (itemPos >= top) {
+            firstItemIdx = i
+            break
+          }
+        }
+      }
+
+      self.scrollOffset = self.getScrollOffset(firstItemIdx)
+      this.setViewport(firstItemIdx, lastItemIdx)
     },
 
-    setViewport () {
+    setViewport (first, last) {
       this.viewportItems = this.items.slice(
-        this.firstItemIdx, this.lastItemIdx
+        first, last
       )
     },
 
