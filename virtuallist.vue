@@ -16,7 +16,6 @@
 
 <script>
 var cache = []
-// height: 500px; width: 60%; border: 1px solid red; overflow:scroll
 export default {
   props: {
     items: {
@@ -29,17 +28,13 @@ export default {
   },
   data () {
     return {
-      firstItemIdx: 0,
-      lastItemIdx: 52,
       bufferCount: 10,
-      scrollTimer: null,
       scrollOffset: 0,
       container: window,
 
       itemLength: 0,
 
       containerHeight: 0,
-      totalRowsHeight: 0,
       rowHeight: 52,
       dynamicHeight: true,
       scrollHeight: 0,
