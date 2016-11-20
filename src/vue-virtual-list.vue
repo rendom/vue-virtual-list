@@ -1,7 +1,7 @@
 <template>
-  <div style="height: 100%">
+  <div :style="containerStyles">
     <div v-bind:style="{height: scrollHeight +'px', position:'relative'}">
-      <ul v-bind:style="{
+      <div v-bind:style="{
         'transform': 'translate(0px, '+scrollOffset + 'px)',
         'list-style-type': 'none',
         'padding-left': '0px',
@@ -9,42 +9,70 @@
       }">
         <component v-bind:is="childComponent" v-for="item in viewportItems" :item="item" ref="item">
         </component>
-      </ul>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 var cache = []
+
+const SCROLL_WINDOW = 'window'
+const SCROLL_CONTAINER = 'container'
+
 export default {
   props: {
     items: {
       type: Array,
       default: []
     },
+    scroll: {
+      type: String
+    },
+    scrollContainerHeight: {
+      type: Number
+    },
     childComponent: {
       type: Object
+    },
+    dynamicHeight: {
+      type: Boolean,
+      default: true
+    },
+    rowHeight: {
+      type: Number,
+      default: 0
+    },
+    bufferCount: {
+      type: Number,
+      default: 10
     }
   },
   data () {
     return {
-      bufferCount: 10,
       scrollOffset: 0,
-      container: window,
-
-      itemLength: 0,
-
-      containerHeight: 0,
-      rowHeight: 52,
-      dynamicHeight: true,
       scrollHeight: 0,
+      itemLength: 0,
+      containerHeight: 0,
+      container: window,
       viewportItems: []
     }
   },
 
   mounted () {
     this.itemLength = this.items.length
+
+    switch (this.scroll) {
+      case SCROLL_CONTAINER:
+        this.container = this.$el
+        break
+      case SCROLL_WINDOW:
+      default:
+        this.container = window
+    }
+
     this.containerHeight = this.$el.offsetHeight
+
     if (this.dynamicHeight === false) {
       this.scrollHeight = this.items.length * this.rowHeight
     } else {
@@ -55,6 +83,7 @@ export default {
 
       this.scrollHeight = size
     }
+
     this.onScroll()
     this.container.addEventListener('scroll', this.onScroll)
   },
@@ -64,6 +93,7 @@ export default {
       if (this.itemLength !== this.items.length) {
         cache = []
         this.itemLength = this.items.length
+
         let size = 0
         for (let item of this.items) {
           size += item.h
@@ -72,6 +102,25 @@ export default {
         this.scrollHeight = size
         this.onScroll()
       }
+    }
+  },
+
+  computed: {
+    containerStyles () {
+      let styles = {}
+
+      switch (this.scroll) {
+        case SCROLL_CONTAINER:
+          let height = this.scrollContainerHeight || 500
+          styles.height = height + 'px'
+          styles.overflow = 'auto'
+          break
+        case SCROLL_WINDOW:
+          styles.height = '100%'
+          break
+      }
+
+      return styles
     }
   },
 
@@ -163,7 +212,6 @@ export default {
         return this.items[index].item.h
       }
     }
-
   }
 }
 </script>
