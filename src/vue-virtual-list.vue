@@ -95,8 +95,12 @@ export default {
         this.itemLength = this.items.length
 
         let size = 0
-        for (let item of this.items) {
-          size += item.h
+        if(this.dynamicHeight) {
+          for (let item of this.items) {
+            size += item.h
+          }
+        } else {
+          size = this.items.length * this.rowHeight
         }
 
         this.scrollHeight = size
@@ -134,8 +138,8 @@ export default {
       let lastItemIdx = false
 
       if (this.container === window) {
-        top = this.container.pageYOffset
-        bottom = this.container.pageYOffset + document.documentElement.clientHeight
+        top = this.$el.scrollTop - this.$el.getBoundingClientRect().top;
+        bottom = this.container.pageYOffset + document.documentElement.clientHeight;
       } else {
         top = this.container.scrollTop
         bottom = this.container.scrollTop + self.containerHeight
