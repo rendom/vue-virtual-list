@@ -105,6 +105,8 @@ export default {
 
         this.scrollHeight = size
         this.onScroll()
+      } else {
+        this.onScroll()
       }
     }
   },
