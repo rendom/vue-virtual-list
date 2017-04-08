@@ -7,8 +7,6 @@
         'padding-left': '0px',
         'margin': '0px'
       }">
-        <component v-bind:is="childComponent" v-for="item in viewportItems" :item="item" ref="item">
-        </component>
       </div>
     </div>
   </div>
@@ -22,18 +20,11 @@ const SCROLL_CONTAINER = 'container'
 
 export default {
   props: {
-    items: {
-      type: Array,
-      default: []
-    },
     scroll: {
       type: String
     },
     scrollContainerHeight: {
       type: Number
-    },
-    childComponent: {
-      type: Object
     },
     dynamicHeight: {
       type: Boolean,
@@ -45,14 +36,36 @@ export default {
     },
     bufferCount: {
       type: Number,
-      default: 10
+      default: 20
     }
   },
+
+    render (createElement) {
+        return createElement('div', {
+            class: 'containerStyles',
+        }, [
+            createElement('div', {
+                style: {
+                    height: this.scrollHeight+'px',
+                    position: 'relative'
+                }
+            }, [createElement('div', {
+                style: {
+                    transform: `translate(0px, ${this.scrollOffset}px)`,
+                    padding: '0px',
+                    margin: '0px'
+                }
+            }, this.getViewport())])
+        ]);
+    },
+
   data () {
     return {
       scrollOffset: 0,
-      scrollHeight: 0,
-      itemLength: 0,
+        first: 0,
+        last: 0,
+      //scrollHeight: 0,
+      slotsLength: 0,
       containerHeight: 0,
       container: window,
       viewportItems: []
@@ -60,7 +73,7 @@ export default {
   },
 
   mounted () {
-    this.itemLength = this.items.length
+    this.slotsLength = this.$slots.default ? this.$slots.default.length : 0;
 
     switch (this.scroll) {
       case SCROLL_CONTAINER:
@@ -71,47 +84,30 @@ export default {
         this.container = window
     }
 
-    this.containerHeight = this.$el.offsetHeight
-
-    if (this.dynamicHeight === false) {
-      this.scrollHeight = this.items.length * this.rowHeight
-    } else {
-      let size = 0
-      for (let item of this.items) {
-        size += item.h
-      }
-
-      this.scrollHeight = size
-    }
-
     this.onScroll()
     this.container.addEventListener('scroll', this.onScroll)
   },
 
-  watch: {
-    'items': function () {
-      if (this.itemLength !== this.items.length) {
+  computed: {
+    scrollHeight () {
+        //if (this.itemLength !== this.items.length) {
         cache = []
-        this.itemLength = this.items.length
-
         let size = 0
-        if(this.dynamicHeight) {
-          for (let item of this.items) {
-            size += item.h
-          }
-        } else {
-          size = this.items.length * this.rowHeight
+        if(this.$slots.default) {
+            if(this.dynamicHeight) {
+                for (let item of this.$slots.default) {
+                    if(item.elm) {
+                        size += item.elm.clientHeight;
+                    }
+                }
+            } else {
+                size = this.slotsLength * this.rowHeight
+            }
         }
 
-        this.scrollHeight = size
-        this.onScroll()
-      } else {
-        this.onScroll()
-      }
-    }
-  },
+        return size;
+    },
 
-  computed: {
     containerStyles () {
       let styles = {}
 
@@ -148,10 +144,10 @@ export default {
       }
 
       if (this.dynamicHeight === false) {
-        firstItemIdx = Math.max(0, Math.floor(top / this.rowHeight)) // - self.bufferCount)
-        lastItemIdx = (Math.ceil(bottom / this.rowHeight) - 1) // + self.bufferCount) - 1
+        firstItemIdx = Math.max(0, Math.floor(top / this.rowHeight) - self.bufferCount)
+        lastItemIdx = (Math.ceil(bottom / this.rowHeight) + self.bufferCount) - 1
       } else {
-        for (let i = 0; i < self.itemLength; i++) {
+        for (let i = 0; i < self.slotsLength; i++) {
           const itemPos = self.getScrollOffset(i)
           if (itemPos >= top && firstItemIdx === false) {
             firstItemIdx = Math.max(0, i - self.bufferCount)
@@ -165,8 +161,8 @@ export default {
       }
 
       if (lastItemIdx === false) {
-        lastItemIdx = self.itemLength - 1
-        for (let i = self.itemLength; i <= 0; i--) {
+        lastItemIdx = self.slotsLength - 1
+        for (let i = self.slotsLength; i <= 0; i--) {
           const itemPos = self.getScrollOffset(i)
           if (itemPos >= top) {
             firstItemIdx = i
@@ -179,10 +175,22 @@ export default {
       this.setViewport(firstItemIdx, lastItemIdx)
     },
 
+      getViewport() {
+          if(this.$slots.default) {
+              this.slotsLength = this.$slots.default.length;
+              return this.$slots.default.slice(this.first, this.last);
+          } else {
+              this.slotsLength = 0;
+              return [];
+          }
+      },
+
     setViewport (first, last) {
-      this.viewportItems = this.items.slice(
-        first, last
-      )
+        this.first = first;
+        this.last = last;
+      // this.viewportItems = this.$slots.default.slice(
+      //   first, last
+      // )
     },
 
     // https://github.com/orgsync/react-list/blob/master/react-list.es6#L309
@@ -201,7 +209,7 @@ export default {
 
         for (let i = from; i < index; ++i) {
           cache[i] = space
-          const itemSize = this.items[i].h
+          const itemSize = this.$slots.default[i].elm.clientHeight;
           if (itemSize == null) break
           space += itemSize
         }
@@ -215,7 +223,7 @@ export default {
       if (this.dynamicHeight === false) {
         return this.rowHeight
       } else {
-        return this.items[index].item.h
+        return this.$slots.default[i].elm.clientHeight;
       }
     }
   }

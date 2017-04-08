@@ -1,44 +1,24 @@
 # vue-virtual-list
 
+DynamicHeight is broken atm.  
 
 ### 1. Install component
 `npm install vue-virtual-list`
 
-### 2. Setup row component
-```
-<template>
-  <div v-bind:class="{item: true}">
-    {{item.name}} {{item.h}}px
-  </div>
-</template>
-
-<script>
-export default {
-  props: {
-    item: Object
-  }
-}
-</script>
-<style>
-  .item {
-    height: 20px;
-    background: #c6c6c6;
-  }
-</style>
-```
 If you have mixed heights on your rows then you need to specify `h (Number)` property on your object with the height.
 
-### 3. Setup your app
+### 2. Setup your app
 ```
 <template>
   <div id="app">
-    <vue-virtual-list :items="items" :childComponent="childComponent"></vue-virtual-list>
+    <vue-virtual-list>
+        <div v-for="item of items">{{item.name}}</div> 
+    </vue-virtual-list>
   </div>
 </template>
 
 <script>
-import VueVirtualList from 'vue-virtual-list'
-import rowComponent from './components/rowComponent'
+import vl from 'vue-virtual-list'
 
 export default {
   components: {
@@ -52,7 +32,6 @@ export default {
 
     return {
       items: items,
-      childComponent: rowComponent,
     }
   }
 }
@@ -62,7 +41,6 @@ export default {
 ### Component properties
 | Name        | Type          | Default  |
 | ------------- |:-------------:| -----:|
-| items      | Array | []|
 | scroll      | String      |   None, this prop is required can either be `window` or `container`. |
 | scrollContainerHegiht | Number      |    Defaults to 500 and is only required if you use scroll container |
 | dynamicHeight | Boolean      |    Defaults to `true` this requires that you specify height on your objects. |
