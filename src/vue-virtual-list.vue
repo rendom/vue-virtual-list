@@ -93,20 +93,18 @@ export default {
         //if (this.itemLength !== this.items.length) {
         cache = []
         let size = 0
-        if(this.$slots.default) {
-            if(this.dynamicHeight) {
-                for (let item of this.$slots.default) {
-                    if(item.elm) {
-                        size += item.elm.clientHeight;
-                    }
+        if(this.$slots.default && this.dynamicHeight) {
+            for (let item of this.$slots.default) {
+                if(item.elm) {
+                    size += item.elm.clientHeight;
                 }
-            } else {
-                size = this.slotsLength * this.rowHeight
             }
+        } else {
+            size = this.slotsLength * this.rowHeight
         }
-
         return size;
     },
+
 
     containerStyles () {
       let styles = {}
