@@ -1,17 +1,3 @@
-<template>
-  <div :style="containerStyles">
-    <div v-bind:style="{height: scrollHeight +'px', position:'relative'}">
-      <div v-bind:style="{
-        'transform': 'translate(0px, '+scrollOffset + 'px)',
-        'list-style-type': 'none',
-        'padding-left': '0px',
-        'margin': '0px'
-      }">
-      </div>
-    </div>
-  </div>
-</template>
-
 <script>
 var cache = []
 
