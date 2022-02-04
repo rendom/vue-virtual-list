@@ -1,6 +1,6 @@
 {
   "name": "vue-virtual-list",
-  "version": "next",
+  "version": "3",
   "description": "Vue.js virtual-list component",
   "main": "src/index.js",
   "scripts": {
