@@ -19,5 +19,5 @@
   "license": "MIT",
    "peerDependencies": {
     "vue": "^3.1"
-  },
+  }
 }
