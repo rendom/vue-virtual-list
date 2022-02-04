@@ -1,4 +1,6 @@
 <script>
+import { h } from 'vue'
+
 var cache = []
 
 const SCROLL_WINDOW = 'window'
@@ -26,16 +28,16 @@ export default {
     }
   },
 
-    render (createElement) {
-        return createElement('div', {
+    render () {
+        return h('div', {
             class: 'containerStyles',
         }, [
-            createElement('div', {
+            h('div', {
                 style: {
                     height: this.scrollHeight+'px',
                     position: 'relative'
                 }
-            }, [createElement('div', {
+            }, [h('div', {
                 style: {
                     transform: `translate(0px, ${this.scrollOffset}px)`,
                     padding: '0px',
@@ -46,6 +48,7 @@ export default {
     },
 
   data () {
+      window.y = this;
     return {
       scrollOffset: 0,
         first: 0,
@@ -59,7 +62,7 @@ export default {
   },
 
   mounted () {
-    this.slotsLength = this.$slots.default ? this.$slots.default.length : 0;
+    this.slotsLength = this.$slots.default ? this.$slots.default().length : 0;
 
     switch (this.scroll) {
       case SCROLL_CONTAINER:
@@ -80,12 +83,13 @@ export default {
         cache = []
         let size = 0
         if(this.$slots.default && this.dynamicHeight) {
-            for (let item of this.$slots.default) {
+            for (let item of this.$slots.default()) {
                 if(item.elm) {
                     size += item.elm.clientHeight;
                 }
             }
         } else {
+            console.log(this.slotsLength, this.rowHeight);
             size = this.slotsLength * this.rowHeight
         }
         return size;
@@ -96,11 +100,12 @@ export default {
       let styles = {}
 
       switch (this.scroll) {
-        case SCROLL_CONTAINER:
+        case SCROLL_CONTAINER: {
           let height = this.scrollContainerHeight || 500
           styles.height = height + 'px'
           styles.overflow = 'auto'
           break
+        }
         case SCROLL_WINDOW:
           styles.height = '100%'
           break
@@ -146,6 +151,7 @@ export default {
 
       if (lastItemIdx === false) {
         lastItemIdx = self.slotsLength - 1
+        // eslint-disable-next-line for-direction
         for (let i = self.slotsLength; i <= 0; i--) {
           const itemPos = self.getScrollOffset(i)
           if (itemPos >= top) {
@@ -161,8 +167,9 @@ export default {
 
       getViewport() {
           if(this.$slots.default) {
-              this.slotsLength = this.$slots.default.length;
-              return this.$slots.default.slice(this.first, this.last);
+              const slot = this.$slots.default()[0];
+              this.slotsLength = slot.children.length;
+              return slot.children.slice(this.first, this.last);
           } else {
               this.slotsLength = 0;
               return [];
@@ -193,7 +200,7 @@ export default {
 
         for (let i = from; i < index; ++i) {
           cache[i] = space
-          const itemSize = this.$slots.default[i].elm.clientHeight;
+          const itemSize = this.$slots.default()[i].elm.clientHeight;
           if (itemSize == null) break
           space += itemSize
         }
@@ -207,7 +214,7 @@ export default {
       if (this.dynamicHeight === false) {
         return this.rowHeight
       } else {
-        return this.$slots.default[i].elm.clientHeight;
+        return this.$slots.default()[index].elm.clientHeight;
       }
     }
   }
